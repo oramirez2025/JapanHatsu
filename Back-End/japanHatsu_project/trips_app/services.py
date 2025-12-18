@@ -1,19 +1,31 @@
+# services.py takes care of the logic for the views
+
+# and the views talks to the user basically and based on that response, may do some work and give it back to the user 
+
+
+# so the user will input some parameters for us (e.g., start date, end date, etc.) then the frontend will send that information over to the backend via a POST request
+# which will then prompt the backend to ask Groq to generate an itinerary and the backend will that generated itinerary and save it off as a Trip + ItineraryItem object in the DB.
+# Next, the backend will take that recently saved object and send it over to the frontend via a GET request so the frontend can display it to the user 
+# 
+
+
+# But if the user doesn't like something, they can UPDATE, DELETE, CREATE an interary item or the entire trip  
+
+
 from openai import OpenAI
 import os
 import json
+from dotenv import load_dotenv
+from .models import Trip, ItineraryItem
+
+
+load_dotenv()
+
 client = OpenAI(
     api_key=os.environ.get("GROQ_API_KEY"),
     base_url="https://api.groq.com/openai/v1",
 )
 
-#example inputs
-input = {"start_date": "02/10/2026",
-         "end_date" : "02/24/2026",
-         "budget" : "moderate",
-         "interests": "food, anime",
-         "group": "couple",
-         "group_details": "romantic",
-         "preferred_cities": "tokyo, kyoto, osaka"}
 
 def generate_prompt(params):
     return (f"""
@@ -51,12 +63,17 @@ def generate_prompt(params):
         """)
 
 
-def generate_itinerary(params):
+def generate_itinerary(Trip, params):
+    # generate the itinerary
     response = client.responses.create(
         model="openai/gpt-oss-20b",
         input= generate_prompt(params))
-    data = json.load(response.output_text)
-    return data
-
-#testing example inputs
-print(generate_itinerary(input))
+    data = json.loads(response.output_text)
+    
+    # turn the itinerary json into itineraryItem objects 
+    res = []
+    for itineraryItem in data:
+        it = ItineraryItem.objects.create(**itineraryItem,Trip=Trip)
+        res.append(it)
+    # feed this to the view to then feed into the user 
+    return res
