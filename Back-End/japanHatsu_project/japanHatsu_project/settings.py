@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'user_app',
     'trips_app',
-    'prechecklist_app',
 ]
 
 AUTH_USER_MODEL = 'user_app.User'

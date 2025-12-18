@@ -1,0 +1,62 @@
+from openai import OpenAI
+import os
+import json
+client = OpenAI(
+    api_key=os.environ.get("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1",
+)
+
+#example inputs
+input = {"start_date": "02/10/2026",
+         "end_date" : "02/24/2026",
+         "budget" : "moderate",
+         "interests": "food, anime",
+         "group": "couple",
+         "group_details": "romantic",
+         "preferred_cities": "tokyo, kyoto, osaka"}
+
+def generate_prompt(params):
+    return (f"""
+        Can you generate a itinerary for a first-time traveler to Japan given these criteria given by the user:
+        Start date: {params["start_date"]}
+        End date: {params["end_date"]}
+        Budget: {params["budget"]}
+        Interests: {params["interests"]}
+        Group: {params["group"]}
+        Group Details: {params["group_details"]}
+        Preferred Cities: {params["preferred_cities"]}
+        Note: I'm saving this generated itinerary in Django. My Trip model and IteraryItem look like this:
+        class Trip(models.Model):
+            user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+            start_date = models.DateField()
+            end_date = models.DateField()
+            budget = models.CharField(max_length=50)
+            group_type = models.CharField(max_length=50)
+            group_details = models.CharField(max_length=100, blank=True)
+            interests = models.JSONField()
+            preferred_cities = models.JSONField()
+            created_at = models.DateTimeField(auto_now_add=True)
+        class ItineraryItem(models.Model):
+            trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="items")
+            day_number = models.IntegerField()
+            title = models.CharField(max_length=255)
+            category = models.CharField(max_length=50)  # touristy, iconic, local, unique
+            description = models.TextField(blank=True)
+            location = models.CharField(max_length=255, blank=True)
+            image_url = models.CharField(max_length=500, blank=True)
+            start_time = models.CharField(max_length=20, blank=True)
+            end_time = models.CharField(max_length=20, blank=True)
+            api_source = models.CharField(max_length=100, blank=True)
+        Moreover, each itinerary item should be for either the morning, afternoon, or evening. Return ONLY valid JSON, no markdown, no commentary.
+        """)
+
+
+def generate_itinerary(params):
+    response = client.responses.create(
+        model="openai/gpt-oss-20b",
+        input= generate_prompt(params))
+    data = json.load(response.output_text)
+    return data
+
+#testing example inputs
+print(generate_itinerary(input))
