@@ -49,3 +49,11 @@ class LogOut(UserPermissions):
     def post(self, request):
         request.user.auth_token.delete()
         return Response(f"{request.user.username} has been logged out.")
+    
+class MeView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
