@@ -11,14 +11,14 @@ from .serializers import TripSerializer, ItineraryItemSerializer
 # okay, someone made a get request to /trip/generate. I'm going to go to my services.py file which has all my logic for generating and make a call there 
 # from the call, I can return the respons 
 
-# trip/generate 
-class TripGeneratorView(APIView):
-    permission_classes = [IsAuthenticated]
-    # the request will include things like start_date, end_date, interests, etc..
-    def get(request):
-        trip = Trip.objects.create(**request.data)
-        it = generate_itinerary(Trip=trip, params=request.data)
-        return Response(it, status=HTTP_201_CREATED)
+# # trip/generate 
+# class TripGeneratorView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     # the request will include things like start_date, end_date, interests, etc..
+#     def get(request):
+#         trip = Trip.objects.create(**request.data)
+#         it = generate_itinerary(Trip=trip, params=request.data)
+#         return Response(it, status=HTTP_201_CREATED)
     
 
 
